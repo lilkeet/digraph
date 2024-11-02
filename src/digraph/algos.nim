@@ -222,12 +222,13 @@ func hasTwoCycle*[T](
     # A count of how many nodes we would be adding to the sorted list.
     var yieldCounter = 1
 
-    var inDegree = dig.degrees.inDegrees
+    var inDegree = dig.inDegrees
 
-    var zeroInDegreeQueue = collect(newSeqOfCap(dig.card)):
-      # A queue made up of nodes with zero edges pointing at them.
-      for node in dig:
-        if inDegree.unsafeGet(node) == 0: node
+    # A queue made up of nodes with zero edges pointing at them.
+    var zeroInDegreeQueue: seq[T] = @[]
+    for node in dig:
+      if inDegree.unsafeGet(node) == 0:
+        zeroInDegreeQueue.add node
 
     while zeroInDegreeQueue.len != 0:
       let current = zeroInDegreeQueue.pop()
@@ -252,6 +253,18 @@ func hasLoop*[T](dig: DiGraph[T]): bool {.raises: [].} =
   result = false
   for _ in dig.loops:
     return true
+
+func inDegrees*[T](dig: DiGraph[T]): Table[T, int] {.raises: [].} =
+  result = Table[T, int]()
+
+  template initialize(value: T) =
+    discard result.hasKeyOrPut(value, 0)
+
+  for parent, children in dig:
+    initialize parent
+    for child in children:
+      initialize child
+      inc result.unsafeGet(child)
 
 func degrees*[T](
     dig: DiGraph[T]
