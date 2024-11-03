@@ -9,6 +9,9 @@ import
   ./debugtools
 
 {.hint[Performance]:on.}
+{.experimental: "strictFuncs".}
+when defined(nimHasStrictDefs):
+  {.experimental: "strictDefs".}
 
 template getBody =
   debugAssert key in table, "Key defect."
@@ -17,8 +20,9 @@ template getBody =
   let index = rawGet(table, key, hc)
   result = table.data[index].val
 
-func unsafeGet*[A; B](table: Table[A, B];
-                      key: A): lent B {.raises: [].} =
+func unsafeGet*[A; B](
+    table: Table[A, B]; key: sink A
+  ): lent B {.raises: [].} =
   ## Equivalent to `table[key]` but no check is made that `key in table`
   ## in release or danger builds.
   ## Undefined behavior when `key notin table`.
@@ -26,8 +30,9 @@ func unsafeGet*[A; B](table: Table[A, B];
 
 
 
-proc unsafeGet*[A; B](table: var Table[A, B];
-                      key: A): var B {.noSideEffect, raises: [].} =
+proc unsafeGet*[A; B](
+    table: var Table[A, B]; key: sink A
+  ): var B {.noSideEffect, raises: [].} =
   ## Equivalent to `table[key]` but no check is made that `key in table`
   ## in release or danger builds.
   ## Undefined behavior when `key notin table`.
