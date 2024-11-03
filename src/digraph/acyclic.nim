@@ -6,8 +6,10 @@ import
   ./algos,
   ./private/unsafetables
 
+{.hint[Performance]:on.}
 {.experimental: "strictFuncs".}
-{.experimental: "strictDefs".}
+when defined(nimHasStrictDefs):
+  {.experimental: "strictDefs".}
 
 type
   DirectedAcyclicGraph*[T] = object

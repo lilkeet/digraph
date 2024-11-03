@@ -29,6 +29,7 @@ import
   std / [tables, sets, strutils],
   ./digraph / private / [unsafetables]
 
+{.hint[Performance]:on.}
 {.experimental: "strictFuncs".}
 when defined(nimHasStrictDefs):
   {.experimental: "strictDefs".}
@@ -78,7 +79,7 @@ type Printable = concept x
   ($x) is string
 
 proc raiseNodeNotinGraphError*[T](
-    node: T
+    node: sink T
 ) {.noReturn, raises: [NodeNotinGraphError].} =
   when node is Printable:
     raise newException(NodeNotinGraphError,
@@ -100,7 +101,7 @@ func childrenOf*[T](
     raiseNodeNotinGraphError(parent)
 
 func incl*[T](
-    dig: var DiGraph[T]; value: T ) {.inline, raises: [].} =
+    dig: var DiGraph[T]; value: sink T ) {.inline, raises: [].} =
   ## Adds a new node to the graph if its not already added.
   if not dig.valuesToChildren.hasKey(value):
     dig.valuesToChildren[value] = HashSet[T]()
@@ -112,20 +113,20 @@ func incl*[T](
     dig.incl value
 
 func inclEdge*[T](
-    dig: var DiGraph[T]; parent, child: T) {.inline, raises: [].} =
+    dig: var DiGraph[T]; parent, child: sink T) {.inline, raises: [].} =
   ## Adds an edge starting at parent and ending at child.
   ## If the nodes do not exist in the graph, they are added.
   dig.incl parent, child
   dig.valuesToChildren.unsafeGet(parent).incl child
 
 func incl*[T](
-  dig: var DiGraph[T]; edge: Edge[T]) {.inline, raises: [].} =
+  dig: var DiGraph[T]; edge: sink Edge[T]) {.inline, raises: [].} =
   ## Adds an edge starting at parent and ending at child.
   ## If the nodes do not exist in the graph, they are added.
   dig.inclEdge edge.parent, edge.child
 
 func excl*[T](
-    dig: var DiGraph[T]; toExclude: T) {.inline, raises: [].} =
+    dig: var DiGraph[T]; toExclude: sink T) {.inline, raises: [].} =
   ## Removes a value from the graph, including all edges that it is in.
   ##
   ## This is an expensive operation, done in an average of `O(V)` where V is
@@ -147,7 +148,7 @@ func excl*[T](
       nodeChildren.excl excluding
 
 func exclEdge*[T](
-    dig: var DiGraph[T]; parent, child: T) {.inline, raises: [].} =
+    dig: var DiGraph[T]; parent, child: sink T) {.inline, raises: [].} =
   ## Removes an edge from the graph if it is present.
   if parent in dig:
     dig.valuesToChildren.unsafeGet(parent).excl child

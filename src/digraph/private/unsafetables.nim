@@ -8,6 +8,8 @@ import
   std / [tables {.all.}, hashes, importutils],
   ./debugtools
 
+{.hint[Performance]:on.}
+
 template getBody =
   debugAssert key in table, "Key defect."
   privateAccess Table

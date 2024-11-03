@@ -4,6 +4,10 @@ import
   ../digraph,
   ./private/[debugtools, unsafetables]
 
+{.hint[Performance]:on.}
+{.experimental: "strictFuncs".}
+when defined(nimHasStrictDefs):
+  {.experimental: "strictDefs".}
 
 func unsafeChildrenOf[T](
     dig: DiGraph[T]; parent: T
@@ -15,17 +19,6 @@ func unsafeChildrenOf[T](
   ## and effects tracking purposes.
   privateAccess DiGraph
   result = dig.valuesToChildren.unsafeGet(parent)
-
-
-# # TODO: generic proc with call convs
-# iterator dfs[T; S: (T) -> bool](
-#     dig: DiGraph[T]; node: T; shouldGiveUpOn: S
-# ): T {.closure, raises: [], effectsOf: shouldGiveUpOn.} =
-#   if not shouldGiveUpOn(node):
-#     yield node
-#     for child in dig.unsafeChildrenOf(node):
-#       for n in dig.dfs(child, shouldGiveUpOn):
-#         yield n
 
 type
   WalkAlgorithm* {.pure.} = enum
