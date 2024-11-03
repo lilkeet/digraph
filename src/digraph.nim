@@ -42,25 +42,25 @@ type
   NodeNotinGraphError* = object of KeyError
 
 
-iterator items*[T](dig: DiGraph[T]): T {.noSideEffect, raises: [].} =
+iterator items*[T](dig: DiGraph[T]): lent T {.noSideEffect, raises: [].} =
   ## Returns each value (node) stored in the DiGraph.
   for node in dig.valuesToChildren.keys:
     yield node
 
 iterator pairs*[T](dig: DiGraph[T]
-): (T, HashSet[T]) {.noSideEffect, raises: [].} =
+): lent (T, HashSet[T]) {.noSideEffect, raises: [].} =
   ## Returns each value (node) and its children in the DiGraph.
   for valueChildrenPair in dig.valuesToChildren.pairs:
     yield valueChildrenPair
 
-iterator nodes*[T](dig: DiGraph[T]): T {.noSideEffect, raises: [].} =
+iterator nodes*[T](dig: DiGraph[T]): lent T {.noSideEffect, raises: [].} =
   for n in dig.items:
     yield n
 
 type Edge*[T] = tuple
   parent, child: T
 
-iterator edges*[T](dig: DiGraph[T]):  Edge[T] {.noSideEffect, raises: [].} =
+iterator edges*[T](dig: DiGraph[T]): Edge[T] {.noSideEffect, raises: [].} =
   for parent, children in dig:
     for child in children:
       yield (parent, child)

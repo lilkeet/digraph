@@ -161,13 +161,11 @@ iterator cycles*[T](dig: DiGraph[T]): seq[T] {.noSideEffect, raises: [].} =
 
   for start in dig:
     if start in visited: continue
-    visited.incl start
 
     var result = newSeqOfCap[T](maxCycleSize)
     result.add start
 
-    for descendent in dig.unsafeWalkFrom(start,
-                         (n) => (n in visited) and (n != start)):
+    for descendent in dig.unsafeWalkFrom(start, (n) => (n in visited)):
       # Handle back-tracking:
       while descendent notin dig.unsafeChildrenOf(result[^1]):
         result.del result.high
@@ -179,6 +177,7 @@ iterator cycles*[T](dig: DiGraph[T]): seq[T] {.noSideEffect, raises: [].} =
         visited.incl descendent
       else:
         yield result[descendentIndex..^1]
+        visited.incl start
         break
 
 
