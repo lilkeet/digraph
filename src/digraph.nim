@@ -104,7 +104,7 @@ func incl*[T](
     dig: var DiGraph[T]; value: sink T ) {.inline, raises: [].} =
   ## Adds a new node to the graph if its not already added.
   if not dig.valuesToChildren.hasKey(value):
-    dig.valuesToChildren[value] = HashSet[T]()
+    dig.valuesToChildren[value] = initHashSet[T](8)
 
 func incl*[T](
     dig: var DiGraph[T]; toAdd: varargs[T] ) {.inline, raises: [].} =
