@@ -6,7 +6,7 @@
 
 import
   std / [tables {.all.}, hashes, importutils],
-  ./[debugtools]
+  ./debugtools
 
 template getBody =
   debugAssert key in table, "Key defect."

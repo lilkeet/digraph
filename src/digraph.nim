@@ -30,7 +30,8 @@ import
   ./digraph / private / [unsafetables]
 
 {.experimental: "strictFuncs".}
-{.experimental: "strictDefs".}
+when defined(nimHasStrictDefs):
+  {.experimental: "strictDefs".}
 
 type
   DirectedGraph*[T] = object
