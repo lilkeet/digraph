@@ -3,9 +3,10 @@ discard """
   action: "run"
   batchable: true
   joinable: true
-  timeout: 2.0
+  timeout: 10.0
   targets: "c cpp js objc"
-  matrix: "; -d:release; -d:danger"
+  valgrind: on
+  matrix: "-d:useMalloc"
 """
 
 ##[This test verifies that the cycle detection algorithms correctly identify
@@ -46,7 +47,33 @@ block simple:
   doAssert myDig.hasTwoCycle(Kahns)
   doAssert myDig.hasTwoCycle(PathBasedStrongComponent)
 
+block loop:
+  var myDig = DiGraph[int]()
+  with myDig:
+    inclEdge 1, 2
+    inclEdge 2, 3
+    inclEdge 3, 4
+    inclEdge 4, 5
 
+    inclEdge 3, 5
+
+    inclEdge 10, 2
+
+    inclEdge 55, 2
+
+  # Verify that the graph currently has no cycles
+  doAssert not myDig.hasCycle
+  doAssert not myDig.hasLoop
+  doAssert not myDig.hasTwoCycle(Kahns)
+  doAssert not myDig.hasTwoCycle(PathBasedStrongComponent)
+
+  myDig.inclEdge 5, 5 # Add an edge from node 5 to node 5, creating a loop
+
+  # Verify that the graph now contains a cycle
+  doAssert myDig.hasCycle
+  doAssert not myDig.hasTwoCycle(Kahns)
+  doAssert not myDig.hasTwoCycle(PathBasedStrongComponent)
+  doAssert myDig.hasLoop
 
 block complex:
   var complexDigraph = DiGraph[int]()

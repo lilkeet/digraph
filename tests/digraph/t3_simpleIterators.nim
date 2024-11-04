@@ -5,7 +5,8 @@ discard """
   joinable: true
   timeout: 2.0
   targets: "c cpp js objc"
-  matrix: "; -d:release; -d:danger"
+  valgrind: on
+  matrix: "-d:useMalloc"
 """
 
 import

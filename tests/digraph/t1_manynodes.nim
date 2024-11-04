@@ -3,9 +3,10 @@ discard """
   action: "run"
   batchable: true
   joinable: true
-  timeout: 20.0
+  timeout: 40.0
   targets: "c cpp js objc"
-  matrix: "; -d:release; -d:danger"
+  valgrind: on
+  matrix: "-d:useMalloc"
 """
 
 import
