@@ -1,4 +1,4 @@
- 
+
 import
   std / [sugar, tables, importutils, deques, sequtils],
   ../digraph,
@@ -155,21 +155,22 @@ iterator cycles*[T](dig: DiGraph[T]): seq[T] {.noSideEffect, raises: [].} =
   for start in dig:
     if start in visited: continue
 
-    var result = newSeqOfCap[T](maxCycleSize)
-    result.add start
+    var myResult = newSeqOfCap[T](maxCycleSize)
+    myResult.add start
 
-    for descendent in dig.unsafeWalkFrom(start, (n) => (n in visited)):
+    for descendent in dig.unsafeWalkFrom(start,
+        (n) => (n in visited) and (n != myResult[^1])):
       # Handle back-tracking:
-      while descendent notin dig.unsafeChildrenOf(result[^1]):
-        result.del result.high
+      while descendent notin dig.unsafeChildrenOf(myResult[^1]):
+        myResult.del myResult.high
 
       const NotFound = -1
-      let descendentIndex = result.find(descendent)
+      let descendentIndex = myResult.find(descendent)
       if descendentIndex == NotFound:
-        result.add descendent
+        myResult.add descendent
         visited.incl descendent
       else:
-        yield result[descendentIndex..^1]
+        yield myResult[descendentIndex..^1]
         visited.incl start
         break
 
