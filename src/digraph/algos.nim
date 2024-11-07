@@ -1,6 +1,6 @@
 
 import
-  std / [sugar, tables, importutils, deques, sequtils],
+  std / [sugar, tables, importutils, deques],
   ../digraph,
   ./private/[debugtools, unsafetables]
 
@@ -20,6 +20,27 @@ func unsafeChildrenOf[T](
   privateAccess DiGraph
   result = dig.valuesToChildren.unsafeGet(parent)
 
+func getIndex[T](
+    dig: DiGraph[T]; parent: T
+  ): TableIndex[T, HashSet[T]] {.inline, raises: [].} =
+  ## Returns the index at which the parent-children pair is stored.
+  privateAccess DiGraph
+  result = dig.valuesToChildren.getIndex(parent)
+
+
+func getKey[T](
+    dig: DiGraph[T]; index: sink TableIndex[T, HashSet[T]]
+  ): lent T {.inline, raises: [].} =
+  privateAccess DiGraph
+  result = dig.valuesToChildren.getKey(index)
+
+func getValue[T](
+    dig: DiGraph[T]; index: sink TableIndex[T, HashSet[T]]
+  ): lent HashSet[T] {.inline, raises: [].} =
+  privateAccess DiGraph
+  result = dig.valuesToChildren.getValue(index)
+
+
 type
   WalkAlgorithm* {.pure.} = enum
     DepthFirst, BreadthFirst
@@ -27,7 +48,7 @@ type
 iterator unsafeWalkFrom*[T](
     dig: DiGraph[T]; start: T; shouldGiveUpOn: (T) -> bool;
     algo: static[WalkAlgorithm] = DepthFirst
-): T {.effectsOf: shouldGiveUpOn, noSideEffect, raises: [].} =
+): lent T {.effectsOf: shouldGiveUpOn, noSideEffect, raises: [].} =
   ## Same as `walkFrom` but no check is done that `start in dig`,
   ## except in debug builds.
   debugAssert start in dig,
@@ -38,33 +59,33 @@ iterator unsafeWalkFrom*[T](
   when algo == DepthFirst:
     # We'll avoid recursion via a closure iterator for compatibility and
     # performance.
-    var stack: seq[T] = dig.unsafeChildrenOf(start).toSeq
+    var stack: seq[TableIndex[T, HashSet[T]]] = @[]
+
+    for immediateChild in dig.unsafeChildrenOf(start):
+      stack.add dig.getIndex(immediateChild)
 
     while stack.len > 0:
-      let current = stack.pop()
-      if not shouldGiveUpOn(current):
-        yield current
-        stack.add dig.unsafeChildrenOf(current).toSeq
-
-    # for child in dig.unsafeChildrenOf(start):
-    #   for n in dig.dfs(child, shouldGiveUpOn):
-    #     yield n
+      let index = stack.pop()
+      if not shouldGiveUpOn(dig.getKey(index)):
+        for child in dig.getValue(index):
+          stack.add dig.getIndex(child)
+        yield dig.getKey(index)
 
   elif algo == BreadthFirst:
-    var queue = Deque[T]()
+    var queue = Deque[TableIndex[T, HashSet[T]]]()
 
     template loadQueueFrom(parent: T) =
       for child in dig.unsafeChildrenOf(parent):
         if not shouldGiveUpOn(child):
-          queue.addLast child
+          queue.addLast dig.getIndex(child)
 
     loadQueueFrom start
 
     while queue.len != 0:
-      let node = queue.popFirst()
-      if not shouldGiveUpOn(node): # must be called twice to prevent dbl yields
-        loadQueueFrom node
-        yield node
+      let nodeIndex = queue.popFirst()
+      if not shouldGiveUpOn(dig.getKey(nodeIndex)): # must be called twice to prevent dbl yields
+        loadQueueFrom dig.getKey(nodeIndex)
+        yield dig.getKey(nodeIndex)
 
   else:
     {.fatal: "This WalkAlgorithm is not implemented.".}
@@ -73,7 +94,7 @@ iterator unsafeWalkFrom*[T](
 iterator walkFrom*[T](
     dig: DiGraph[T]; start: T; shouldGiveUpOn: (T) -> bool;
     algo: static[WalkAlgorithm] = DepthFirst
-): T {.effectsOf: shouldGiveUpOn, noSideEffect,
+): lent T {.effectsOf: shouldGiveUpOn, noSideEffect,
        raises: [NodeNotinGraphError].} =
   ##[Starts at node `start`, then walks along the graph
      according to the algorithm specified. It yields each node it comes to.
@@ -105,19 +126,19 @@ iterator walkFrom*[T](
 
 iterator walkFrom*[T](
     dig: DiGraph[T]; start: T; algo: static[WalkAlgorithm] = DepthFirst
-): T {.noSideEffect, raises: [NodeNotinGraphError].} =
+): lent T {.noSideEffect, raises: [NodeNotinGraphError].} =
   ##[Same as the main `walkFrom` iterator but never gives up on a node.]##
   for node in dig.walkFrom(start, (_) => false, algo):
     yield node
 
 iterator descendentsOf*[T](
     dig: DiGraph[T]; ancestor: T; algo: static[WalkAlgorithm] = DepthFirst
-): T {.noSideEffect, raises: [NodeNotinGraphError].} =
+): lent T {.noSideEffect, raises: [NodeNotinGraphError].} =
   ##[Yields each descendent of `ancestor`, never repeating.
 
      This is your classical Depth First and Breadth First Search algorithm.]##
   var visited = [ancestor].toHashSet()
-  for descendent in dig.walkFrom(ancestor, (n) => n in visited, algo):
+  for descendent in algos.walkFrom(dig, ancestor, (n) => n in visited, algo):
     visited.incl descendent
     yield descendent
 

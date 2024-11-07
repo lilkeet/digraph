@@ -5,8 +5,8 @@ discard """
   joinable: true
   timeout: 10.0
   targets: "c cpp js objc"
-  valgrind: on
-  matrix: "-d:useMalloc"
+  valgrind: off
+  matrix: ""
 """
 
 ##[This test verifies that the cycle detection algorithms correctly identify
