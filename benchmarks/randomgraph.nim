@@ -68,7 +68,8 @@ when UseMalebolgia:
     ## and a seed for random generation.
     ##
     ## Multiple cores are used.
-    initializeSimpleStatus fmt"Generating {inputs.len} graphs on {ThreadPoolSize} cores..."
+    initializeSimpleStatus:
+      fmt"Generating {inputs.len} graphs on {ThreadPoolSize} cores..."
 
     template helper(input: (int, int, int64)): DiGraph[T] =
       generateTestGraph[T](input[0], input[1], input[2])
