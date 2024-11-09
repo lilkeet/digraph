@@ -121,8 +121,8 @@ proc generateDenseGraphsWithInfo*[T: Ordinal or SomeFloat](
       # the number of edges can range from 0 to numberOfNodes^2.
       let
         numNodes = rand(10..maxAmountOfNodes)
-        modifier = rand(0.0 .. float(maxAmountOfNodes))
-        numEdges = int(numNodes.float * modifier)
+        modifier = rand(0 .. numNodes)
+        numEdges = numNodes * modifier
       (numNodes, numEdges, int64(sampleNum))
 
   result[0] = inputs.mapIt(it[0])
