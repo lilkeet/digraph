@@ -79,9 +79,9 @@ when UseMalebolgia:
     finishSimpleStatus fmt"Finished generating {inputs.len} graphs..."
 
 
-proc generateSparseGraphs*[T: Ordinal or SomeFloat](
+proc generateSparseGraphsWithInfo*[T: Ordinal or SomeFloat](
     amountOfGraphs = 1_000; maxAmountOfNodes = 10_000
-  ): seq[DiGraph[T]] =
+  ): (seq[int], seq[int], seq[DiGraph[T]]) =
   ## Generates random graphs with up to `maxAmountOfNodes` number of nodes and
   ## up to `2*maxAmountOfNodes` number of edges.
 
@@ -94,15 +94,25 @@ proc generateSparseGraphs*[T: Ordinal or SomeFloat](
         numEdges = int(numNodes.float * modifier)
       (numNodes, numEdges, int64(sampleNum))
 
+  result[0] = inputs.mapIt(it[0])
+  result[1] = inputs.mapIt(it[1])
+
   when UseMalebolgia:
-    result = parGenerateTestGraphs[T](inputs, 50)
+    result[2] = parGenerateTestGraphs[T](inputs, 50)
   else:
-    result = generateTestGraphs[T](inputs)
+    result[2] = generateTestGraphs[T](inputs)
 
-
-proc generateDenseGraphs*[T: Ordinal or SomeFloat](
-    amountOfGraphs = 100; maxAmountOfNodes = 1_000
+proc generateSparseGraphs*[T: Ordinal or SomeFloat](
+    amountOfGraphs = 1_000; maxAmountOfNodes = 10_000
   ): seq[DiGraph[T]] =
+  ## Generates random graphs with up to `maxAmountOfNodes` number of nodes and
+  ## up to `2*maxAmountOfNodes` number of edges.
+  generateSparseGraphsWithInfo[T](amountOfGraphs, maxAmountOfNodes)[^1]
+
+
+proc generateDenseGraphsWithInfo*[T: Ordinal or SomeFloat](
+    amountOfGraphs = 100; maxAmountOfNodes = 1_000
+  ): (seq[int], seq[int], seq[DiGraph[T]]) =
   ## Generates random graphs with up to `maxAmountOfNodes` number of nodes and
   ## up to `maxAmountOfNodes^2` number of edges.
 
@@ -115,7 +125,17 @@ proc generateDenseGraphs*[T: Ordinal or SomeFloat](
         numEdges = int(numNodes.float * modifier)
       (numNodes, numEdges, int64(sampleNum))
 
+  result[0] = inputs.mapIt(it[0])
+  result[1] = inputs.mapIt(it[1])
+
   when UseMalebolgia:
-    result = parGenerateTestGraphs[T](inputs, 10)
+    result[2] = parGenerateTestGraphs[T](inputs, 10)
   else:
-    result = generateTestGraphs[T](inputs)
+    result[2] = generateTestGraphs[T](inputs)
+
+proc generateDenseGraphs*[T: Ordinal or SomeFloat](
+    amountOfGraphs = 100; maxAmountOfNodes = 1_000
+  ): seq[DiGraph[T]] =
+  ## Generates random graphs with up to `maxAmountOfNodes` number of nodes and
+  ## up to `maxAmountOfNodes^2` number of edges.
+  generateDenseGraphsWithInfo[T](amountOfGraphs, maxAmountOfNodes)[^1]
