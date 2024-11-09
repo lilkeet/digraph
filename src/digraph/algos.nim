@@ -165,7 +165,9 @@ func isAncestorOf*[T](
   possibleDescendant.isDescendentOf possibleAncestor, dig
 
 
-iterator cycles*[T](dig: DiGraph[T]): seq[T] {.noSideEffect, raises: [].} =
+iterator cycles*[T](
+    dig: DiGraph[T]; countLoopsAsCycles: static[bool] = true
+  ): seq[T] {.noSideEffect, raises: [].} =
   ##[Yields each cycle found in the dig.
      This includes loops.
 
@@ -173,25 +175,45 @@ iterator cycles*[T](dig: DiGraph[T]): seq[T] {.noSideEffect, raises: [].} =
   let maxCycleSize = dig.card
   var visited = HashSet[T]()
 
+  var
+    myResult = newSeqOfCap[T](maxCycleSize)
+    inMyResult = HashSet[T]()
+
+  template addToMyResult(toAdd: T) =
+    myResult.add toAdd
+    inMyResult.incl toAdd
+
+  template resetMyResult() =
+    myResult.setLen 0
+    clear inMyResult
+
+  template backtrack() =
+    inMyResult.excl myResult[myResult.high]
+    myResult.del myResult.high
+
   for start in dig:
     if start in visited: continue
 
-    var myResult = newSeqOfCap[T](maxCycleSize)
-    myResult.add start
+    resetMyResult()
+    addToMyResult start
 
-    for descendent in dig.unsafeWalkFrom(start,
-        (n) => (n in visited) and (n != myResult[^1])):
+    func giveUpOn(n: T): bool =
+      when countLoopsAsCycles:
+        (n in visited) and (n != myResult[^1])
+      else:
+        n in visited
+
+    for descendent in dig.unsafeWalkFrom(start, giveUpOn):
       # Handle back-tracking:
       while descendent notin dig.unsafeChildrenOf(myResult[^1]):
-        myResult.del myResult.high
+        backtrack()
 
-      const NotFound = -1
-      let descendentIndex = myResult.find(descendent)
-      if descendentIndex == NotFound:
-        myResult.add descendent
+      if descendent notin inMyResult:
+        addToMyResult descendent
         visited.incl descendent
       else:
-        yield myResult[descendentIndex..^1]
+        yield myResult[myResult.find(descendent)..^1]
+        resetMyResult()
         visited.incl start
         break
 
@@ -223,8 +245,8 @@ func hasTwoCycle*[T](
 
   when algo == PathBasedStrongComponent:
     result = false
-    for cycle in dig.cycles:
-      if cycle.len != 1: return true
+    for cycle in dig.cycles(countLoopsAsCycles=false):
+      return true
 
   elif algo == Kahns:
     # We are using a modified Kahns algorithm where we dont actually keep track
@@ -256,7 +278,6 @@ func hasTwoCycle*[T](
 
   else:
     {.fatal: "Cycle algorithm not implemented.".}
-
 
 iterator loops*[T](dig: DiGraph[T]): T {.noSideEffect, raises: [].} =
   for node, children in dig:
