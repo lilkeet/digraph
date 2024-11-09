@@ -212,7 +212,6 @@ iterator cycles*[T](
         visited.incl descendent
       else:
         yield myResult[myResult.find(descendent)..^1]
-        resetMyResult()
         visited.incl start
         break
 
