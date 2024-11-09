@@ -172,12 +172,11 @@ iterator cycles*[T](
      This includes loops.
 
      Uses the Path-based strong component algorithm.]##
-  let maxCycleSize = dig.card
-  var visited = HashSet[T]()
+  var visited = initHashSet[T](dig.card)
 
   var
-    myResult = newSeqOfCap[T](maxCycleSize)
-    inMyResult = HashSet[T]()
+    myResult = newSeqOfCap[T](dig.card)
+    inMyResult = initHashSet[T](dig.card)
 
   template addToMyResult(toAdd: T) =
     myResult.add toAdd
