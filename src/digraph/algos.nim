@@ -288,16 +288,17 @@ func hasLoop*[T](dig: DiGraph[T]): bool {.raises: [].} =
     return true
 
 func inDegrees*[T](dig: DiGraph[T]): Table[T, int] {.raises: [].} =
-  result = Table[T, int]()
+  result = initTable[T, int](dig.card)
 
   template initialize(value: T) =
     discard result.hasKeyOrPut(value, 0)
 
   for parent, children in dig:
     initialize parent
-    for child in children:
-      initialize child
-      inc result.unsafeGet(child)
+    for child in children.items:
+      result.defaultOrInc child
+      # initialize child
+      # inc result.unsafeGet(child)
 
 func degrees*[T](
     dig: DiGraph[T]
